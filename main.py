@@ -32,6 +32,13 @@ def main():
     # vehicle_directory_loader = VehicleDirectoryLoader(db_session=session_121, auth_data=auth_data)
 
     # vehicle_directory_loader.run()
+    """
+        TODO: 
+        Запускать скрипт выгружать с 29 июля 16:00 по 30 июля 10:00 и с 30 июля 10:00 по 30 июля 16:00
+        Скрипт запускается в 10:01 утра, выгружается данные с 16:00 предыдущего дня по 10:00 нынешнего дня
+        Второй запуск в 16:01 - выгружает данные с 10:00 нынешнего дня по 16:00 нынешнего дня
+    """
+
     consolidated_report_loader = ConsolidatedReportLoader(db_session=session_121, auth_data=auth_data)
     print(consolidated_report_loader.jwt)
     consolidated_report_loader.run()
