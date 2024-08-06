@@ -1,10 +1,12 @@
 from dataclasses import dataclass, field, is_dataclass, fields
-from typing import TypeVar, Dict, Any, Type
+from typing import TypeVar, Dict, Any, Type, TYPE_CHECKING
+
 
 @dataclass
 class JwtClaims:
     jwt: str
     refresh: str
+    username: str
 
 
 @dataclass
@@ -17,12 +19,24 @@ class VehicleDirectoryObject:
 
 
 @dataclass
-class VehicleDirectoryResponse:
+class VehicleDirectoryChildren:
     id: int
     parentGroupId: int | None
     name: str
     autocheck_id: int
     children: list
+    username: str
+    objects: list[VehicleDirectoryObject] = field(default_factory=list)
+
+
+@dataclass
+class VehicleDirectoryResponse:
+    id: int
+    parentGroupId: int | None
+    name: str
+    autocheck_id: int
+    children: list[VehicleDirectoryChildren]
+    username: str
     objects: list[VehicleDirectoryObject] = field(default_factory=list)
 
 

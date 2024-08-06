@@ -1,12 +1,21 @@
 import ast
+import asyncio
 from json import loads
 import os
-from typing import List, Union
+from typing import List, Union, Type, Any
 from zoneinfo import ZoneInfo
 
+import aiohttp
 import requests
 import base64
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
+
+from aiohttp import ClientSession
+from sqlalchemy import Column
+from sqlalchemy.orm import Session
+
+from exceptions.custom_exceptions import WrongTimeToRun
+from models.models import OmnicommCredentials
 from structs.dataclasses import JwtClaims
 
 
@@ -72,7 +81,7 @@ def generate_date_list() -> List[List[Union[int, int]]]:
                 range_end = 28
 
             if month == current_month:
-                range_end = current_day
+                range_end = current_day - 1
 
             for day in range(start_date, range_end + 1, 1):
 
@@ -93,11 +102,51 @@ def generate_date_list() -> List[List[Union[int, int]]]:
     return date_list
 
 
-def generate_url_list(request_url: str, url_params_str: str) -> tuple[List[str], list[list[int]]]:
+def generate_url_list(request_url: str, vehicle_ids: list, url_params_str: str, is_single_day: bool) -> list[Any]:
     url_list = []
-    date_list = generate_date_list()
+    if not is_single_day:
+        date_list = generate_date_list()
+    else:
+        current_date = datetime.now()
+        if time(16, 1, 0) < current_date.time() < time(16, 30, 0):
+            end_date_1 = datetime.strptime(
+                f"{current_date.year}-{current_date.month}-{current_date.day} 10:00:00",
+                "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Etc/GMT-0"))
+            begin_date_1 = end_date_1 - timedelta(hours=18)
+        elif time(10, 1, 0) < time() < datetime.time(10, 30, 0):
+            end_date_1 = datetime.strptime(
+                f"{current_date.year}-{current_date.month}-{current_date.day} 10:00:00",
+                "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Etc/GMT-0"))
+            begin_date_1 = end_date_1 - timedelta(hours=18)
+        else:
+            raise WrongTimeToRun()
+        date_list = [[int(begin_date_1.timestamp()), int(end_date_1.timestamp())]]
     for date_element in date_list:
-        url_list.append(
-            request_url + url_params_str + f"&timeBegin={date_element[0]}&timeEnd={date_element[1]}"
-        )
-    return url_list, date_list
+        url_list.append([
+            request_url + url_params_str + f"&timeBegin={date_element[0]}&timeEnd={date_element[1]}",
+            vehicle_ids[0].jwt
+        ])
+    return list(zip(url_list, date_list))
+
+
+async def fetch_jwt_list(session: ClientSession, url: str, credential: Type[OmnicommCredentials]) -> JwtClaims:
+
+    async with session.post(url, data={"login": credential.login, "password": credential.password}) as response:
+        response_item = await response.json()
+        response_item["username"] = credential.login
+        return JwtClaims(**response_item)
+
+
+async def multiple_authorize_omnicomm(session: Session) -> list[JwtClaims]:
+    head_url = os.getenv("OMNICOMM_HEAD_URL")
+    auth_endpoint = '/auth/login?jwt=1'
+    url = head_url + auth_endpoint
+    jwt_token_list: list[JwtClaims] = []
+    credential_list: List[Type[OmnicommCredentials]] = session.query(OmnicommCredentials).all()
+    async with aiohttp.ClientSession() as session:
+        tasks = [fetch_jwt_list(session, url, credential) for credential in credential_list]
+        responses: list[JwtClaims] = list(await asyncio.gather(*tasks))
+        for response in responses:
+            jwt_token_list.append(response)
+
+    return jwt_token_list

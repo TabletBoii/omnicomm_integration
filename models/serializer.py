@@ -1,15 +1,20 @@
 from datetime import datetime
-from typing import List, TypeVar, Type, Any, Tuple, Dict
+from typing import List, TypeVar, Type, Any, Tuple, Dict, Union
 
 from sqlalchemy import Row, func
 
 from models.models import OmnicommVehicleDirectory, OmnicommStatisticsData
-from structs.dataclasses import VehicleDirectoryResponse
+from structs.dataclasses import VehicleDirectoryResponse, VehicleDirectoryChildren
 from structs.statistics_dataclass import StatisticsResponseVehicleDataList, StatisticsResponseList
 
 
-def serialize_vehicle_directory_model(res_list: list, obj: VehicleDirectoryResponse) -> None:
+def serialize_vehicle_directory_model(res_list: list, obj: Union[VehicleDirectoryResponse, VehicleDirectoryChildren], username: str) -> None:
+
     for vehicle in obj.objects:
+        if obj.children:
+            for vehicle_child_list in obj.children:
+                serialize_vehicle_directory_model(res_list, vehicle_child_list, username)
+
         res_list.append(
             OmnicommVehicleDirectory(
                 id=obj.id,
@@ -20,7 +25,8 @@ def serialize_vehicle_directory_model(res_list: list, obj: VehicleDirectoryRespo
                 name=vehicle.name,
                 terminal_type=vehicle.terminal_type,
                 terminal_id=vehicle.terminal_id,
-                receive_data=vehicle.receive_data
+                receive_data=vehicle.receive_data,
+                username=username
             )
         )
 
@@ -92,9 +98,11 @@ def serialize_statistics_data(
         obj_list: StatisticsResponseList | List[StatisticsResponseVehicleDataList],
         periods: Dict[str, int]=None
 ) -> None:
+
     if isinstance(obj_list, StatisticsResponseList):
         for obj in obj_list.data:
             for vehicle in obj.response.data.vehicleDataList:
+
                 res_list.append(
                     serialize_to_obj(vehicle, periods=obj.period)
                 )
@@ -111,6 +119,8 @@ T = TypeVar('T')
 def deserialize_query_all_model(rows: List[Any], _T: Type[T]) -> List[T]:
     if rows and hasattr(rows[0], '__table__'):
         return rows
+    elif len(rows) == 0:
+        return []
     elif isinstance(rows[0], Row):
         return rows
     else:

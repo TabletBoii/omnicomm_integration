@@ -19,6 +19,7 @@ class OmnicommVehicleDirectory(Base):
     terminal_type = Column('terminal_type', String)
     terminal_id = Column('terminal_id', Integer)
     receive_data = Column('receive_data', Integer)
+    username = Column('username', String)
 
     __table_args__ = (
         UniqueConstraint('uuid', name='uix_1'),
@@ -88,3 +89,10 @@ class OmnicommStatisticsData(Base):
     mileage = Column('mileage', DOUBLE_PRECISION)
     motoHoursServiceCounter = Column('moto_hours_service_counter', DOUBLE_PRECISION)
 
+
+class OmnicommCredentials(Base):
+    __tablename__ = "omnicomm_auth_data"
+
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
+    login = Column('login', String)
+    password = Column('password', String)
