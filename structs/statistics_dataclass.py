@@ -12,24 +12,24 @@ class StatisticsReponseTotalMw:
     totalMileageSpeeding: float | None
     totalWorkedUnderLoadRPMPercent: float | None
     totalWorkedOnExcessRPMPercent: float | None
-    totalWorkedOnMove: int | None
+    totalWorkedOnMove: float | None
     totalWorkedOnNormalRPMPercent: float | None
-    totalWorked: int | None
+    totalWorked: float | None
     totalMovementMileagePerLitre: float | None
     totalWorkedOnIdlingRPMPercent: float | None
-    totalWorkedUnderLoadRPM: int | None
+    totalWorkedUnderLoadRPM: float | None
     totalMileagePerLitre: float | None
     totalWorkedOnMovePercent: float | None
     averageSpeed: float | None
     maxSpeed: float | None
     totalWorkedNoMovementPercent: float | None
-    totalLayUpTime: int | None
-    totalWorkedNoMovementTime: int | None
+    totalLayUpTime: float | None
+    totalWorkedNoMovementTime: float | None
     averageMileage: float | None
-    totalWorkedOnIdlingRPM: int | None
-    totalWorkedOnNormalRPM: int | None
-    totalMoveTime: int | None
-    averageMoveTime: int | None
+    totalWorkedOnIdlingRPM: float | None
+    totalWorkedOnNormalRPM: float | None
+    totalMoveTime: float | None
+    averageMoveTime: float | None
     totalLayUpTimePercent: float | None
 
 
@@ -37,84 +37,84 @@ class StatisticsReponseTotalMw:
 class StatisticsReponseTotalFuel:
     totalFuelOnMoveCrit: float | None
     consPerMHEngineOn: float | None
-    totalFuelNotMoveIdle: int | None
+    totalFuelNotMoveIdle: float | None
     averageConsumptionMH: float | None
-    consumptionEngineOn: int | None
-    totalFuelOnMoveNorm: int | None
+    consumptionEngineOn: float | None
+    totalFuelOnMoveNorm: float | None
     totalFuelConsumptionMHMovement: float | None
-    totalDelivery: int | None
-    totalConsumptionOnMove: int | None
+    totalDelivery: float | None
+    totalConsumptionOnMove: float | None
     averageConsumptionMHMovement: float | None
-    totalConsumptionWOMovement: int | None
-    totalFuelOnMoveIdle: int | None
-    totalRefuelling: int | None
+    totalConsumptionWOMovement: float | None
+    totalFuelOnMoveIdle: float | None
+    totalRefuelling: float | None
     averageConsumptionMHWOMovement: float | None
     totalFilling: float | None
     averageConsumption: float | None
-    totalConsumption: int | None
+    totalConsumption: float | None
     averageConsumptionOnMove100: float | None
-    totalFuelNotMoveNorm: int | None
+    totalFuelNotMoveNorm: float | None
     co2Emission: float | None
     totalFuelNotMoveCrit: float | None
     averageConsumption100: float | None
-    totalDraining: int | None
+    totalDraining: float | None
 
 
 @dataclass
 class StatisticsResponseVehicleDataFuel:
     fuelConsMHWOMovement: float
     fuelConsMH: float
-    fuelConsumptionWOMovement: int
-    startVolume: int
-    fuelCons100Ex: int
+    fuelConsumptionWOMovement: float
+    startVolume: float
+    fuelCons100Ex: float
     fuelConsPerMotorhour: float
     fuelConsumptionOnMove100: float
-    fuelConsumption: int
-    fuelConsDev: int | None
-    endVolume: int
-    fuelCons100Dev: int | None
+    fuelConsumption: float
+    fuelConsDev: float | None
+    endVolume: float
+    fuelCons100Dev: float | None
     deviationWorkNormIdleLoad: float
-    draining: int
+    draining: float
     fuelCons100: float
     normConsumptionMH: float | None
-    normCons100: int
-    delivery: int
-    dutyConsumptionMH: int
-    deviation: int
-    fuelConsumptionNotMoveIdle: int
-    maxVolume: int
-    fuelConsumptionOnWorked: int
-    filling: int
-    dutyConsumption100: int
-    minVolume: int
-    fuelConsumptionOnWorkedNoMovement: int
+    normCons100: float
+    delivery: float
+    dutyConsumptionMH: float
+    deviation: float
+    fuelConsumptionNotMoveIdle: float
+    maxVolume: float
+    fuelConsumptionOnWorked: float
+    filling: float
+    dutyConsumption100: float
+    minVolume: float
+    fuelConsumptionOnWorkedNoMovement: float
     co2Emission: float
-    refuelling: int
-    fuelConsEx: int
-    fuelConsumptionOnMove: int
+    refuelling: float
+    fuelConsEx: float
+    fuelConsumptionOnMove: float
     fuelConsMHMovement: float
-    fuelConsumptionOnMoveIdle: int
+    fuelConsumptionOnMoveIdle: float
 
 
 @dataclass
 class StatisticsResponseVehicleDataMw:
-    layUp: int
-    excessRPMPercent: int
-    excessRPM: int
+    layUp: float
+    excessRPMPercent: float
+    excessRPM: float
     movementPercent: float
     layUpPercent: float
     maxSpeed: float
-    mileageSpeeding: int
-    idlingRPM: int
+    mileageSpeeding: float
+    idlingRPM: float
     workedOnMovementPercent: float
     normalRPMPercent: float
-    worked: int
+    worked: float
     idlingRPMPercent: float
-    normalRPM: int
+    normalRPM: float
     workedNoMovementPercent: float
-    workedOnMovement: int
-    movement: int
-    workedNoMovement: int
+    workedOnMovement: float
+    movement: float
+    workedNoMovement: float
     mileage: float
     motoHoursServiceCounter: float | None
 

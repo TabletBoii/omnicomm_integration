@@ -14,7 +14,6 @@ def serialize_vehicle_directory_model(res_list: list, obj: Union[VehicleDirector
         if obj.children:
             for vehicle_child_list in obj.children:
                 serialize_vehicle_directory_model(res_list, vehicle_child_list, username)
-
         res_list.append(
             OmnicommVehicleDirectory(
                 id=obj.id,
@@ -35,8 +34,8 @@ def serialize_to_obj(vehicle: StatisticsResponseVehicleDataList, periods: List[i
     return OmnicommStatisticsData(
         vehicle_id=vehicle.vehicleID,
         name=vehicle.name,
-        period_begin=func.to_timestamp(periods[0]),
-        period_end=func.to_timestamp(periods[1]),
+        period_begin=datetime.fromtimestamp(periods[0]),
+        period_end=datetime.fromtimestamp(periods[1]),
 
         fuelConsMHWOMovement=vehicle.fuel.fuelConsMHWOMovement,
         fuelConsMH=vehicle.fuel.fuelConsMH,

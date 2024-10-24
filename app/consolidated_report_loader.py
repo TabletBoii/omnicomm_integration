@@ -6,8 +6,10 @@ import time as program_time
 from typing import List, Coroutine, Dict, Union, Any
 from zoneinfo import ZoneInfo
 
+import sqlalchemy.exc
 from aiohttp import ClientSession
 from sqlalchemy import text
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from abstraction.abstract_loader import AbstractLoader
@@ -60,9 +62,24 @@ class ConsolidatedReportLoader(AbstractLoader):
         vehicle_id_list = [vehicle[0] for vehicle in vehicle_id_list]
         return vehicle_id_list
 
+    @staticmethod
+    def batch_insert(session, objects, batch_size=100):
+        for i in range(0, len(objects), batch_size):
+            batch = objects[i:i + batch_size]
+            session.add_all(batch)
+            session.commit()
+
     def __write_to_db(self, formated_statistic_list: List[OmnicommStatisticsData]):
-        self.db_session.add_all(formated_statistic_list)
-        self.db_session.commit()
+        # self.db_session.add_all(formated_statistic_list)
+        # self.batch_insert(self.db_session, formated_statistic_list)
+        # self.db_session.execute(insert(OmnicommStatisticsData), formated_statistic_list)
+        try:
+            self.db_session.bulk_save_objects(formated_statistic_list)
+            self.db_session.commit()
+        except sqlalchemy.exc.ProgrammingError as err:
+            print(err.code)
+            print(err)
+            self.db_session.rollback()
 
     """
         Выгружает данные с 31 мая 2024 года по нынешнюю дату с очисткой всей таблицы
@@ -96,9 +113,10 @@ class ConsolidatedReportLoader(AbstractLoader):
             data_to_fetch += url_list
 
         async with aiohttp.ClientSession() as session:
-
+            fetch_start_time = program_time.time()
             tasks = [self.__async_get_consolidated_report(session, item) for item in data_to_fetch]
             responses = list(await asyncio.gather(*tasks))
+            print("Fetch time: --- %s seconds ---" % (program_time.time() - fetch_start_time))
             for response in responses:
                 if response["response"]["code"] != 0:
                     print("Jopa")
@@ -118,5 +136,7 @@ class ConsolidatedReportLoader(AbstractLoader):
             # self.__async_multiple_day_fetch_statistics())  # Запускать, если нужно выгрузить данные с 1 июня по нынешнее время
         statistic_response_list = asyncio.run(self.__async_fetch_statistics())
         formated_statistic_list = self.__format_statistics_list_for_db(statistic_response_list)
+        db_start_time = program_time.time()
         self.__write_to_db(formated_statistic_list)
+        print("Database insertion time: --- %s seconds ---" % (program_time.time() - db_start_time))
         print("--- %s seconds ---" % (program_time.time() - start_time))

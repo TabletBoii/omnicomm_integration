@@ -19,6 +19,9 @@ from models.models import OmnicommCredentials
 from structs.dataclasses import JwtClaims
 
 
+TIMEZONE = "Etc/GMT-5"
+
+
 def authorize_omnicomm(login: str, password: str) -> JwtClaims:
     head_url = os.getenv("OMNICOMM_HEAD_URL")
     auth_endpoint = '/auth/login?jwt=1'
@@ -89,13 +92,13 @@ def generate_date_list() -> List[List[Union[int, int]]]:
                     date_day = "0" + str(day)
                 else:
                     date_day = str(day)
-                end_date_1 = datetime.strptime(f"{year}-{date_month}-{date_day} 10:00:00",
-                                               "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Etc/GMT-0"))
-                begin_date_1 = end_date_1 - timedelta(hours=18)
+                end_date_1 = datetime.strptime(f"{year}-{date_month}-{date_day} 19:00:00",
+                                               "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo(TIMEZONE))
+                begin_date_1 = end_date_1 - timedelta(hours=12)
 
-                end_date_2 = datetime.strptime(f"{year}-{date_month}-{date_day} 16:00:00",
-                                               "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Etc/GMT-0"))
-                begin_date_2 = end_date_2 - timedelta(hours=6)
+                end_date_2 = datetime.strptime(f"{year}-{date_month}-{date_day} 07:00:00",
+                                               "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo(TIMEZONE))
+                begin_date_2 = end_date_2 - timedelta(hours=12)
                 date_list.append([int(begin_date_1.timestamp()), int(end_date_1.timestamp())])
                 date_list.append([int(begin_date_2.timestamp()), int(end_date_2.timestamp())])
 
@@ -108,19 +111,15 @@ def generate_url_list(request_url: str, vehicle_ids: list, url_params_str: str, 
         date_list = generate_date_list()
     else:
         current_date = datetime.now()
-        if time(16, 1, 0) < current_date.time() < time(16, 30, 0):
-            end_date_1 = datetime.strptime(
-                f"{current_date.year}-{current_date.month}-{current_date.day} 10:00:00",
-                "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Etc/GMT-0"))
-            begin_date_1 = end_date_1 - timedelta(hours=18)
-        elif time(10, 1, 0) < time() < datetime.time(10, 30, 0):
-            end_date_1 = datetime.strptime(
-                f"{current_date.year}-{current_date.month}-{current_date.day} 10:00:00",
-                "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Etc/GMT-0"))
-            begin_date_1 = end_date_1 - timedelta(hours=18)
-        else:
-            raise WrongTimeToRun()
-        date_list = [[int(begin_date_1.timestamp()), int(end_date_1.timestamp())]]
+        end_date_1 = datetime.strptime(f"{current_date.year}-{current_date.month}-{current_date.day} 19:00:00",
+                                       "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo(TIMEZONE))
+        begin_date_1 = end_date_1 - timedelta(hours=12)
+
+        end_date_2 = datetime.strptime(f"{current_date.year}-{current_date.month}-{current_date.day} 07:00:00",
+                                       "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo(TIMEZONE))
+        begin_date_2 = end_date_2 - timedelta(hours=12)
+
+        date_list = [[int(begin_date_1.timestamp()), int(end_date_1.timestamp())],[int(begin_date_2.timestamp()), int(end_date_2.timestamp())]]
     for date_element in date_list:
         url_list.append([
             request_url + url_params_str + f"&timeBegin={date_element[0]}&timeEnd={date_element[1]}",
@@ -130,11 +129,15 @@ def generate_url_list(request_url: str, vehicle_ids: list, url_params_str: str, 
 
 
 async def fetch_jwt_list(session: ClientSession, url: str, credential: Type[OmnicommCredentials]) -> JwtClaims:
-
-    async with session.post(url, data={"login": credential.login, "password": credential.password}) as response:
-        response_item = await response.json()
-        response_item["username"] = credential.login
-        return JwtClaims(**response_item)
+    try:
+        async with session.post(url, data={"login": credential.login, "password": credential.password}) as response:
+            response_item = await response.json()
+            print(response_item)
+            response_item["username"] = credential.login
+            return JwtClaims(**response_item)
+    except Exception as e:
+        print(e)
+        return
 
 
 async def multiple_authorize_omnicomm(session: Session) -> list[JwtClaims]:
