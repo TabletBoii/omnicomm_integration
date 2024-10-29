@@ -7,7 +7,7 @@ from typing import List, Coroutine, Dict, Union, Any
 from zoneinfo import ZoneInfo
 
 import sqlalchemy.exc
-from aiohttp import ClientSession
+from aiohttp import ClientSession, ClientTimeout
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
@@ -111,17 +111,21 @@ class ConsolidatedReportLoader(AbstractLoader):
                 is_single_day=self.single_day_update
             )
             data_to_fetch += url_list
-
-        async with aiohttp.ClientSession() as session:
+        timeout = ClientTimeout(total=720)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             fetch_start_time = program_time.time()
             tasks = [self.__async_get_consolidated_report(session, item) for item in data_to_fetch]
             responses = list(await asyncio.gather(*tasks))
             print("Fetch time: --- %s seconds ---" % (program_time.time() - fetch_start_time))
             for response in responses:
-                if response["response"]["code"] != 0:
-                    print("Jopa")
-                    print(response["response"])
-                    responses.remove(response["response"])
+                try:
+                    if response["response"]["code"] != 0:
+                        print("Jopa")
+                        print(response["response"])
+                        responses.remove(response["response"])
+                except Exception as e:
+                    print(e)
+                    print(response)
             statistic_response_list = deserialize_dict({"data": responses}, StatisticsResponseList)
 
             # print(statistic_response_list)
