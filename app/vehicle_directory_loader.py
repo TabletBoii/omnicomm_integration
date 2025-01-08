@@ -29,7 +29,7 @@ class VehicleDirectoryLoader(AbstractLoader):
     async def __get_vehicle_list(self) -> list[VehicleDirectoryResponse]:
         fetched_vehicle_list = []
         async with aiohttp.ClientSession() as session:
-            tasks = [self.__fetch_jwt_list(session, self.url+self.endpoint, credential) for credential in self.auth_data]
+            tasks = [self.__fetch_jwt_list(session, self.url+self.endpoint, credential) for credential in self.auth_data if credential is not None]
             responses: list[VehicleDirectoryResponse] = list(await asyncio.gather(*tasks))
             for response in responses:
                 fetched_vehicle_list.append(response)
@@ -74,6 +74,9 @@ class VehicleDirectoryLoader(AbstractLoader):
             self.db_session.execute(text("TRUNCATE public.omnicomm_vehicle_directory"))
         statistic_db_list = asyncio.run(self.__get_vehicle_list())
         for statistic in statistic_db_list:
+            # print(statistic)
             formated_statistic_db_list = self.__format_vehicle_list_for_db(statistic, statistic.username)
+            # for i in formated_statistic_db_list:
+            #     print(i.name)
             self.__write_to_db(formated_statistic_db_list)
         print("--- %s seconds ---" % (program_time.time() - start_time))

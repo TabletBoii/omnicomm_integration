@@ -9,11 +9,10 @@ from structs.statistics_dataclass import StatisticsResponseVehicleDataList, Stat
 
 
 def serialize_vehicle_directory_model(res_list: list, obj: Union[VehicleDirectoryResponse, VehicleDirectoryChildren], username: str) -> None:
+    print("children: ", obj.children)
 
     for vehicle in obj.objects:
-        if obj.children:
-            for vehicle_child_list in obj.children:
-                serialize_vehicle_directory_model(res_list, vehicle_child_list, username)
+        # print(vehicle)
         res_list.append(
             OmnicommVehicleDirectory(
                 id=obj.id,
@@ -28,6 +27,9 @@ def serialize_vehicle_directory_model(res_list: list, obj: Union[VehicleDirector
                 username=username
             )
         )
+    if obj.children:
+        for vehicle_child_list in obj.children:
+            serialize_vehicle_directory_model(res_list, vehicle_child_list, username)
 
 
 def serialize_to_obj(vehicle: StatisticsResponseVehicleDataList, periods: List[int]) -> OmnicommStatisticsData:

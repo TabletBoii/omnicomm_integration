@@ -106,8 +106,8 @@ if __name__ == '__main__':
 
     load_dir = False
     delete_dir = False
-    update_data = True
-    single_day_update = True
+    update_data = False
+    single_day_update = False
 
     args = parser.parse_args()
     if args.load_dir:
@@ -117,6 +117,7 @@ if __name__ == '__main__':
     if args.update_data:
         update_data = True
     if args.multiple_update_data:
+        update_data = True
         single_day_update = False
 
     main(

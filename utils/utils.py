@@ -1,5 +1,6 @@
 import ast
 import asyncio
+import calendar
 from json import loads
 import os
 from typing import List, Union, Type, Any
@@ -61,44 +62,63 @@ def is_token_expired(jwt_claims: JwtClaims) -> bool:
     return False
 
 
-def generate_date_list() -> List[List[Union[int, int]]]:
+def generate_date_list() -> List[List[int]]:
     date_list = []
+
+    current_year = datetime.now().year
     current_month = datetime.now().month
     current_day = datetime.now().day
-    start_month = 6  # 6
-    start_date = 1  # 1
-    for year in ["2024"]:
-        for month in range(start_month, current_month + 1):
-            if month < 10:
-                date_month = "0" + str(month)
-            else:
-                date_month = str(month)
 
+    start_month_2024 = 6  # Start in June 2024
+    start_date = 1  # Day of month to start from
+
+    for year in range(2024, current_year + 1):
+        # Determine which month to start from this year
+        if year == 2024:
+            month_start = start_month_2024
+        else:
+            month_start = 1
+
+        # Determine which month to end at this year
+        if year < current_year:
+            month_end = 12
+        else:
+            month_end = current_month
+
+        for month in range(month_start, month_end + 1):
+            # Determine the number of days in this month
             if month in (1, 3, 5, 7, 8, 10, 12):
                 range_end = 31
             elif month in (4, 6, 9, 11):
                 range_end = 30
-            elif (int(year) - 2000) % 4 == 0 and month == 2:
+            elif calendar.isleap(year) and month == 2:
                 range_end = 29
             else:
                 range_end = 28
 
-            if month == current_month:
+            # If it's the current month of the current year, adjust to current_day - 1
+            if year == current_year and month == current_month:
                 range_end = current_day - 1
 
-            for day in range(start_date, range_end + 1, 1):
+            for day in range(start_date, range_end + 1):
+                # Convert the day, month, and year into strings with zero-padding
+                date_month = f"{month:02d}"
+                date_day = f"{day:02d}"
 
-                if day < 10:
-                    date_day = "0" + str(day)
-                else:
-                    date_day = str(day)
-                end_date_1 = datetime.strptime(f"{year}-{date_month}-{date_day} 19:00:00",
-                                               "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo(TIMEZONE))
+                # 19:00 - 07:00 shift
+                end_date_1 = datetime.strptime(
+                    f"{year}-{date_month}-{date_day} 19:00:00",
+                    "%Y-%m-%d %H:%M:%S"
+                ).replace(tzinfo=ZoneInfo(TIMEZONE))
                 begin_date_1 = end_date_1 - timedelta(hours=12)
 
-                end_date_2 = datetime.strptime(f"{year}-{date_month}-{date_day} 07:00:00",
-                                               "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo(TIMEZONE))
+                # 07:00 - 19:00 shift
+                end_date_2 = datetime.strptime(
+                    f"{year}-{date_month}-{date_day} 07:00:00",
+                    "%Y-%m-%d %H:%M:%S"
+                ).replace(tzinfo=ZoneInfo(TIMEZONE))
                 begin_date_2 = end_date_2 - timedelta(hours=12)
+
                 date_list.append([int(begin_date_1.timestamp()), int(end_date_1.timestamp())])
                 date_list.append([int(begin_date_2.timestamp()), int(end_date_2.timestamp())])
 
@@ -132,7 +152,7 @@ async def fetch_jwt_list(session: ClientSession, url: str, credential: Type[Omni
     try:
         async with session.post(url, data={"login": credential.login, "password": credential.password}) as response:
             response_item = await response.json()
-            print(response_item)
+            print(credential.login)
             response_item["username"] = credential.login
             return JwtClaims(**response_item)
     except Exception as e:
